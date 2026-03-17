@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}YoiBlog{% endblock %} - WebUI</title>
+  <link rel="stylesheet" href="{{ url_for('routes.static', filename='css/webui.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-logo">YoiBlog</div>
+    <nav class="sidebar-nav">
+      <a href="/?lang={{ lang }}" {% if active == 'dashboard' %}class="active"{% endif %}>
+        <span class="icon">📊</span> {{ t['sidebar.dashboard'] }}
+      </a>
+      <a href="/posts?lang={{ lang }}" {% if active == 'posts' %}class="active"{% endif %}>
+        <span class="icon">📝</span> {{ t['sidebar.posts'] }}
+      </a>
+      <a href="/posts/new?lang={{ lang }}" {% if active == 'editor' %}class="active"{% endif %}>
+        <span class="icon">✏️</span> {{ t['sidebar.new_post'] }}
+      </a>
+      <a href="/settings?lang={{ lang }}" {% if active == 'settings' %}class="active"{% endif %}>
+        <span class="icon">⚙️</span> {{ t['sidebar.settings'] }}
+      </a>
+      <a href="/deploy?lang={{ lang }}" {% if active == 'deploy' %}class="active"{% endif %}>
+        <span class="icon">🚀</span> {{ t['sidebar.deploy'] }}
+      </a>
+    </nav>
+    <div style="padding:12px 24px;border-top:1px solid var(--border);margin-top:auto;">
+      <a href="?lang={% if lang == 'zh' %}en{% else %}zh{% endif %}" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;">
+        🌐 {{ t['lang.switch'] }}
+      </a>
+    </div>
+  </aside>
+
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const LANG = '{{ lang }}';
+
+    function showToast(message, type) {
+      const t = document.getElementById('toast');
+      t.textContent = message;
+      t.className = 'toast toast-' + (type || 'success') + ' show';
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    async function apiCall(url, method, body) {
+      try {
+        const opts = { method: method || 'GET', headers: {'Content-Type': 'application/json'} };
+        if (body) opts.body = JSON.stringify(body);
+        const resp = await fetch(url, opts);
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Request failed');
+        return data;
+      } catch (e) {
+        showToast(e.message, 'error');
+        throw e;
+      }
+    }
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

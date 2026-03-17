@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% set lang = site.language if site.language in ['zh', 'en'] else 'en' %}
+
+{% block title %}{{ '标签' if lang == 'zh' else 'Tags' }} - {{ site.title }}{% endblock %}
+
+{% block content %}
+<h1 class="page-title">{{ '标签' if lang == 'zh' else 'Tags' }}</h1>
+
+<div class="tag-cloud">
+  {% for slug, tag in tags.items() %}
+  <a href="/tags/{{ slug }}/" class="tag {% if tag.count >= 5 %}tag-large{% elif tag.count >= 3 %}tag-medium{% endif %}">
+    {{ tag.name }} ({{ tag.count }})
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

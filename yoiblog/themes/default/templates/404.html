@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% set lang = site.language if site.language in ['zh', 'en'] else 'en' %}
+
+{% block title %}{{ '页面未找到' if lang == 'zh' else 'Page Not Found' }} - {{ site.title }}{% endblock %}
+
+{% block content %}
+<div class="error-page">
+  <div class="error-code">404</div>
+  <p class="error-message">{{ '抱歉，你访问的页面不存在' if lang == 'zh' else 'Page not found' }}</p>
+  <a href="/" class="error-link">{{ '返回首页' if lang == 'zh' else 'Go Home' }}</a>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% set lang = site.language if site.language in ['zh', 'en'] else 'en' %}
+
+{% block title %}{{ '归档' if lang == 'zh' else 'Archive' }} - {{ site.title }}{% endblock %}
+
+{% block content %}
+<h1 class="page-title">{{ '归档' if lang == 'zh' else 'Archive' }}</h1>
+
+{% for year, posts in archive.items() %}
+<h2 class="archive-year">{{ year }}</h2>
+<ul class="archive-list">
+  {% for post in posts %}
+  <li class="archive-item">
+    <span class="archive-date">{{ post.date | date('%m-%d') }}</span>
+    <span class="archive-title"><a href="{{ post.url }}">{{ post.title }}</a></span>
+  </li>
+  {% endfor %}
+</ul>
+{% endfor %}
+{% endblock %}

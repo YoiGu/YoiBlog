@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% set active = "dashboard" %}
+
+{% block title %}{{ t['dashboard.title'] }}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <h1 class="content-title">{{ t['dashboard.title'] }}</h1>
+  <div style="display:flex;gap:8px;">
+    <button class="btn btn-primary" onclick="doGenerate(this)">{{ t['dashboard.generate'] }}</button>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="card stat-card">
+    <div class="stat-value">{{ total_posts }}</div>
+    <div class="stat-label">{{ t['dashboard.posts'] }}</div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value">{{ total_tags }}</div>
+    <div class="stat-label">{{ t['dashboard.tags'] }}</div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value">{{ total_categories }}</div>
+    <div class="stat-label">{{ t['dashboard.categories'] }}</div>
+  </div>
+  <div class="card stat-card">
+    <div class="stat-value">{{ config.theme }}</div>
+    <div class="stat-label">{{ t['dashboard.theme'] }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-bottom:16px;">{{ t['dashboard.recent_posts'] }}</h3>
+  {% if posts %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ t['dashboard.col_title'] }}</th>
+          <th>{{ t['dashboard.col_date'] }}</th>
+          <th>{{ t['dashboard.col_status'] }}</th>
+          <th>{{ t['dashboard.col_actions'] }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for post in posts %}
+        <tr>
+          <td><strong>{{ post.title }}</strong></td>
+          <td style="color:var(--text-muted);">{{ post.date }}</td>
+          <td>
+            {% if post.draft %}
+            <span class="tag tag-draft">{{ t['dashboard.draft'] }}</span>
+            {% else %}
+            <span class="tag">{{ t['dashboard.published'] }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="/posts/{{ post.filename }}/edit?lang={{ lang }}" class="btn btn-outline btn-sm">{{ t['dashboard.edit'] }}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="color:var(--text-muted);text-align:center;padding:24px;">{{ t['dashboard.no_posts'] }} <a href="/posts/new?lang={{ lang }}">{{ t['dashboard.create_first'] }}</a></p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function doGenerate(btn) {
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '{{ t["dashboard.generating"] }}';
+  try {
+    await apiCall('/api/generate', 'POST');
+    showToast('{{ t["dashboard.generate_success"] }}');
+  } catch(e) {} finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+</script>
+{% endblock %}

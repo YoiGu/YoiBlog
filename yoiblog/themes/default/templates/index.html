@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% set lang = site.language if site.language in ['zh', 'en'] else 'en' %}
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="hero-content">
+    <h1 class="hero-title">{{ site.title }}</h1>
+    {% if site.subtitle %}
+    <p class="hero-subtitle">{{ site.subtitle }}</p>
+    {% endif %}
+    <div class="hero-stats">
+      <span class="hero-stat"><strong>{{ all_posts | length }}</strong> {{ '篇文章' if lang == 'zh' else 'posts' }}</span>
+      <span class="hero-stat-divider"></span>
+      <span class="hero-stat"><strong>{{ tags | length }}</strong> {{ '个标签' if lang == 'zh' else 'tags' }}</span>
+      <span class="hero-stat-divider"></span>
+      <span class="hero-stat"><strong>{{ categories | length }}</strong> {{ '个分类' if lang == 'zh' else 'categories' }}</span>
+    </div>
+  </div>
+</section>
+
+<!-- Sort Controls -->
+<div class="sort-bar">
+  <span class="sort-bar-label">{{ '排序' if lang == 'zh' else 'Sort by' }}:</span>
+  <button class="sort-btn active" data-sort="date-desc">{{ '最新优先' if lang == 'zh' else 'Latest' }}</button>
+  <button class="sort-btn" data-sort="date-asc">{{ '最早优先' if lang == 'zh' else 'Oldest' }}</button>
+  <button class="sort-btn" data-sort="title-asc">{{ '标题 A→Z' if lang == 'zh' else 'Title A→Z' }}</button>
+  <button class="sort-btn" data-sort="title-desc">{{ '标题 Z→A' if lang == 'zh' else 'Title Z→A' }}</button>
+</div>
+
+<div class="post-list" id="post-list">
+  {% for post in posts %}
+  <article class="post-card" data-date="{{ post.date.strftime('%Y%m%d%H%M%S') }}" data-title="{{ post.title | lower }}">
+    {% if post.cover %}
+    <div class="post-card-cover">
+      <img src="{{ post.cover }}" alt="{{ post.title }}" loading="lazy">
+    </div>
+    {% endif %}
+    <div class="post-card-body">
+      <div class="post-meta">
+        <span class="post-meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          {{ post.date | date }}
+        </span>
+        {% if post.categories %}
+        <span class="post-meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          {{ post.categories | join(', ') }}
+        </span>
+        {% endif %}
+      </div>
+      <h2 class="post-card-title">
+        <a href="{{ post.url }}">{{ post.title }}</a>
+      </h2>
+      <p class="post-excerpt">{{ post.excerpt }}</p>
+      <div class="post-card-footer">
+        <div class="post-card-tags">
+          {% for tag in post.tags %}
+          <a href="/tags/{{ tag | lower | replace(' ', '-') }}/" class="tag">{{ tag }}</a>
+          {% endfor %}
+        </div>
+        <a href="{{ post.url }}" class="read-more">
+          {{ '阅读全文' if lang == 'zh' else 'Read more' }}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+{% if pagination.total_pages > 1 %}
+<div class="pagination">
+  {% if pagination.has_prev %}
+  <a href="{{ pagination.prev_url }}" class="pagination-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    {{ '上一页' if lang == 'zh' else 'Prev' }}
+  </a>
+  {% endif %}
+
+  {% for page_num in range(1, pagination.total_pages + 1) %}
+    {% if page_num == pagination.current %}
+    <span class="current">{{ page_num }}</span>
+    {% else %}
+    <a href="{% if page_num == 1 %}/{% else %}/page/{{ page_num }}/{% endif %}">{{ page_num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if pagination.has_next %}
+  <a href="{{ pagination.next_url }}" class="pagination-btn">
+    {{ '下一页' if lang == 'zh' else 'Next' }}
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function() {
+  const list = document.getElementById('post-list');
+  const buttons = document.querySelectorAll('.sort-btn');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      buttons.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      sortPosts(this.dataset.sort);
+    });
+  });
+
+  function sortPosts(mode) {
+    const cards = Array.from(list.querySelectorAll('.post-card'));
+    cards.sort((a, b) => {
+      if (mode === 'date-desc') return b.dataset.date.localeCompare(a.dataset.date);
+      if (mode === 'date-asc') return a.dataset.date.localeCompare(b.dataset.date);
+      if (mode === 'title-asc') return a.dataset.title.localeCompare(b.dataset.title);
+      if (mode === 'title-desc') return b.dataset.title.localeCompare(a.dataset.title);
+      return 0;
+    });
+    cards.forEach(card => list.appendChild(card));
+  }
+})();
+</script>
+{% endblock %}

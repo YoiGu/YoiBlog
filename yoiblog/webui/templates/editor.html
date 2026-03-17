@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% set active = "editor" %}
+
+{% block title %}{% if mode == 'edit' %}{{ t['editor.edit_title'] }}{% else %}{{ t['editor.new_title'] }}{% endif %}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <h1 class="content-title">{% if mode == 'edit' %}{{ t['editor.edit_title'] }}{% else %}{{ t['editor.new_title'] }}{% endif %}</h1>
+  <div style="display:flex;gap:8px;">
+    <button class="btn btn-outline" onclick="savePost(true)" id="draft-btn">{{ t['editor.save_draft'] }}</button>
+    <button class="btn btn-primary" onclick="savePost(false)" id="publish-btn">{{ t['editor.publish'] }}</button>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:12px;">
+    <div class="form-group" style="margin:0;">
+      <label class="form-label">{{ t['editor.title_label'] }}</label>
+      <input type="text" id="post-title" class="form-input" placeholder="{{ t['editor.title_placeholder'] }}" value="{{ post.title if post else '' }}">
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label class="form-label">{{ t['editor.tags_label'] }}</label>
+      <input type="text" id="post-tags" class="form-input" placeholder="{{ t['editor.tags_placeholder'] }}" value="{{ post.tags | join(', ') if post and post.tags else '' }}">
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label class="form-label">{{ t['editor.categories_label'] }}</label>
+      <input type="text" id="post-categories" class="form-input" placeholder="{{ t['editor.categories_placeholder'] }}" value="{{ post.categories | join(', ') if post and post.categories else '' }}">
+    </div>
+  </div>
+  <div class="form-group" style="margin:0;">
+    <label class="form-label">{{ t['editor.excerpt_label'] }}</label>
+    <input type="text" id="post-excerpt" class="form-input" placeholder="{{ t['editor.excerpt_placeholder'] }}" value="{{ post.excerpt if post else '' }}">
+  </div>
+</div>
+
+<div class="editor-container">
+  <div class="editor-pane">
+    <div class="pane-header">{{ t['editor.markdown'] }}</div>
+    <textarea id="editor" class="editor-textarea" placeholder="{{ t['editor.write_placeholder'] }}">{{ post.content if post else '' }}</textarea>
+  </div>
+  <div class="preview-pane">
+    <div class="pane-header">{{ t['editor.preview'] }}</div>
+    <div id="preview" class="preview-content"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const editor = document.getElementById('editor');
+const preview = document.getElementById('preview');
+const mode = '{{ mode }}';
+const filename = '{{ post.filename if post else "" }}';
+
+const I18N = {
+  title_required: '{{ t["editor.title_required"] }}',
+  post_updated: '{{ t["editor.post_updated"] }}',
+  post_created: '{{ t["editor.post_created"] }}',
+  publishing: '{{ t["editor.publishing"] }}',
+  publish_success: '{{ t["editor.publish_success"] }}',
+  publish_fail_generate: '{{ t["editor.publish_fail_generate"] }}',
+  saved_draft: '{{ t["editor.saved_draft"] }}',
+  preview_placeholder: '{{ t["editor.preview_placeholder"] }}',
+  publish_text: '{{ t["editor.publish"] }}',
+  draft_text: '{{ t["editor.save_draft"] }}',
+};
+
+let previewTimer;
+editor.addEventListener('input', () => {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(updatePreview, 300);
+});
+
+async function updatePreview() {
+  const content = editor.value;
+  if (!content.trim()) {
+    preview.innerHTML = '<p style="color:var(--text-muted);">' + I18N.preview_placeholder + '</p>';
+    return;
+  }
+  try {
+    const data = await apiCall('/api/preview/render', 'POST', { content });
+    preview.innerHTML = data.html;
+  } catch (e) {}
+}
+
+async function savePost(asDraft) {
+  const title = document.getElementById('post-title').value.trim();
+  const tags = document.getElementById('post-tags').value;
+  const categories = document.getElementById('post-categories').value;
+  const excerpt = document.getElementById('post-excerpt').value.trim();
+  const content = editor.value;
+
+  if (!title) { showToast(I18N.title_required, 'error'); return; }
+
+  const publishBtn = document.getElementById('publish-btn');
+  const draftBtn = document.getElementById('draft-btn');
+
+  const body = {
+    title,
+    content,
+    excerpt,
+    tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+    categories: categories ? categories.split(',').map(c => c.trim()).filter(Boolean) : [],
+    draft: asDraft,
+    auto_generate: !asDraft,  // Auto-generate when publishing
+  };
+
+  if (!asDraft) {
+    publishBtn.disabled = true;
+    publishBtn.textContent = I18N.publishing;
+  } else {
+    draftBtn.disabled = true;
+  }
+
+  try {
+    if (mode === 'edit') {
+      const data = await apiCall('/api/posts/' + filename, 'PUT', body);
+      if (asDraft) {
+        showToast(I18N.saved_draft);
+      } else if (data.generated) {
+        showToast(I18N.publish_success);
+      } else {
+        showToast(I18N.publish_fail_generate, 'error');
+      }
+    } else {
+      const data = await apiCall('/api/posts', 'POST', body);
+      if (asDraft) {
+        showToast(I18N.saved_draft);
+      } else if (data.generated) {
+        showToast(I18N.publish_success);
+      } else {
+        showToast(I18N.post_created);
+      }
+      window.location.href = '/posts/' + data.filename + '/edit?lang=' + LANG;
+    }
+  } finally {
+    publishBtn.disabled = false;
+    publishBtn.textContent = I18N.publish_text;
+    draftBtn.disabled = false;
+    draftBtn.textContent = I18N.draft_text;
+  }
+}
+
+// Initial preview
+updatePreview();
+</script>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% set lang = site.language if site.language in ['zh', 'en'] else 'en' %}
+
+{% block title %}{{ '搜索' if lang == 'zh' else 'Search' }} - {{ site.title }}{% endblock %}
+
+{% block content %}
+<h1 class="page-title">{{ '搜索' if lang == 'zh' else 'Search' }}</h1>
+
+<input type="text" id="search-input" class="search-input" placeholder="{{ '输入关键词搜索文章...' if lang == 'zh' else 'Type to search posts...' }}" autofocus>
+
+<div id="search-results" class="search-results"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="/static/js/search.js"></script>
+{% endblock %}

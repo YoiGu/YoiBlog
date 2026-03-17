@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% set lang = site.language if site.language in ['zh', 'en'] else 'en' %}
+
+{% block title %}{{ '分类' if lang == 'zh' else 'Category' }}: {{ category.name }} - {{ site.title }}{% endblock %}
+
+{% block content %}
+<h1 class="page-title">{{ '分类' if lang == 'zh' else 'Category' }}: {{ category.name }} <span style="color:var(--text-muted);font-size:0.6em;">({{ category.count }})</span></h1>
+
+<div class="post-list">
+  {% for post in category.posts %}
+  <article class="post-card">
+    <div class="post-card-body">
+      <div class="post-meta">
+        <span class="post-meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          {{ post.date | date }}
+        </span>
+      </div>
+      <h2 class="post-card-title">
+        <a href="{{ post.url }}">{{ post.title }}</a>
+      </h2>
+      <p class="post-excerpt">{{ post.excerpt }}</p>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% endblock %}

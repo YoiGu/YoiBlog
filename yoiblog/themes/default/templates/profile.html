@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% set lang = site.language if site.language in ['zh', 'en'] else 'en' %}
+
+{% block title %}{{ '关于' if lang == 'zh' else 'About' }} - {{ site.title }}{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+  <div class="profile-card">
+    <div class="profile-header">
+      {% if config.profile.avatar %}
+      <img src="{{ config.profile.avatar }}" alt="{{ site.author }}" class="profile-avatar">
+      {% else %}
+      <div class="profile-avatar-placeholder">{{ site.author[0] | upper }}</div>
+      {% endif %}
+      <h1 class="profile-name">{{ site.author }}</h1>
+      {% if site.subtitle %}
+      <p class="profile-subtitle">{{ site.subtitle }}</p>
+      {% endif %}
+    </div>
+
+    {% if config.profile.bio %}
+    <div class="profile-bio">
+      {{ config.profile.bio }}
+    </div>
+    {% endif %}
+
+    <div class="profile-stats">
+      <div class="profile-stat">
+        <div class="profile-stat-value">{{ all_posts | length }}</div>
+        <div class="profile-stat-label">{{ '文章' if lang == 'zh' else 'Posts' }}</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value">{{ tags | length }}</div>
+        <div class="profile-stat-label">{{ '标签' if lang == 'zh' else 'Tags' }}</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value">{{ categories | length }}</div>
+        <div class="profile-stat-label">{{ '分类' if lang == 'zh' else 'Categories' }}</div>
+      </div>
+    </div>
+
+    {% if config.profile.social %}
+    <div class="profile-social">
+      {% for name, url in config.profile.social.items() %}
+      {% if url %}
+      <a href="{{ url }}" class="profile-social-link" target="_blank" rel="noopener">
+        {{ name }}
+      </a>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  {% if all_posts %}
+  <div class="profile-recent">
+    <h2 class="profile-section-title">{{ '最近文章' if lang == 'zh' else 'Recent Posts' }}</h2>
+    <ul class="archive-list">
+      {% for post in all_posts[:10] %}
+      <li class="archive-item">
+        <span class="archive-date">{{ post.date | date('%Y-%m-%d') }}</span>
+        <span class="archive-title"><a href="{{ post.url }}">{{ post.title }}</a></span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

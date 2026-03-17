@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - {{ site.title }}{% endblock %}
+{% block description %}{{ post.excerpt }}{% endblock %}
+{% block og_title %}{{ post.title }}{% endblock %}
+{% block og_description %}{{ post.excerpt }}{% endblock %}
+{% block og_type %}article{% endblock %}
+
+{% block main_class %}post-layout{% endblock %}
+
+{% set lang = site.language if site.language in ['zh', 'en'] else 'en' %}
+
+{% block content %}
+<div class="post-container">
+  <article class="post-article">
+    <header class="post-header">
+      {% if post.categories %}
+      <div class="post-categories-bar">
+        {% for cat in post.categories %}
+        <a href="/categories/{{ cat | lower | replace(' ', '-') }}/" class="post-category-link">{{ cat }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <h1 class="post-title">{{ post.title }}</h1>
+      <div class="post-meta-bar">
+        <span class="post-meta-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          {{ post.date | date }}
+        </span>
+        {% if post.updated %}
+        <span class="post-meta-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          {{ '更新于 ' if lang == 'zh' else 'Updated ' }}{{ post.updated | date }}
+        </span>
+        {% endif %}
+        <span class="post-meta-item" id="reading-time">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="reading-time-text"></span>
+        </span>
+      </div>
+      {% if post.tags %}
+      <div class="post-tags-bar">
+        {% for tag in post.tags %}
+        <a href="/tags/{{ tag | lower | replace(' ', '-') }}/" class="tag">{{ tag }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </header>
+
+    <div class="post-content" id="post-content">
+      {{ post.content_html | safe }}
+    </div>
+
+    <!-- Post footer -->
+    <div class="post-footer">
+      <div class="post-share">
+        <span class="post-share-label">{{ '分享文章' if lang == 'zh' else 'Share' }}:</span>
+        <a href="https://twitter.com/intent/tweet?text={{ post.title | urlencode }}&url={{ site.url }}{{ post.url }}" target="_blank" rel="noopener" class="post-share-btn">Twitter</a>
+      </div>
+    </div>
+  </article>
+
+  <!-- Floating TOC sidebar -->
+  {% if post.toc %}
+  <aside class="toc-sidebar" id="toc-sidebar">
+    <div class="toc-sidebar-inner">
+      <div class="toc-sidebar-title">{{ '目录' if lang == 'zh' else 'Contents' }}</div>
+      <div class="toc-sidebar-content">
+        {{ post.toc | safe }}
+      </div>
+    </div>
+  </aside>
+  {% endif %}
+</div>
+
+<nav class="post-nav">
+  {% if prev_post %}
+  <a href="{{ prev_post.url }}" class="post-nav-item">
+    <div class="post-nav-label">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      {{ '上一篇' if lang == 'zh' else 'Previous' }}
+    </div>
+    <div class="post-nav-title">{{ prev_post.title }}</div>
+  </a>
+  {% else %}
+  <div></div>
+  {% endif %}
+
+  {% if next_post %}
+  <a href="{{ next_post.url }}" class="post-nav-item post-nav-next">
+    <div class="post-nav-label">
+      {{ '下一篇' if lang == 'zh' else 'Next' }}
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="post-nav-title">{{ next_post.title }}</div>
+  </a>
+  {% else %}
+  <div></div>
+  {% endif %}
+</nav>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function() {
+  // Reading time estimation
+  const content = document.getElementById('post-content');
+  if (content) {
+    const text = content.textContent || '';
+    const cjk = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+    const words = text.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, '').split(/\s+/).filter(Boolean).length;
+    const minutes = Math.max(1, Math.round((cjk / 300) + (words / 200)));
+    const lang = '{{ lang }}';
+    document.getElementById('reading-time-text').textContent =
+      lang === 'zh' ? minutes + ' 分钟阅读' : minutes + ' min read';
+  }
+
+  // TOC active tracking
+  const tocSidebar = document.getElementById('toc-sidebar');
+  if (tocSidebar) {
+    const tocLinks = tocSidebar.querySelectorAll('a');
+    const headings = [];
+    tocLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        const el = document.getElementById(decodeURIComponent(href.slice(1)));
+        if (el) headings.push({ el: el, link: link });
+      }
+    });
+
+    let ticking = false;
+    function updateTocActive() {
+      const scrollY = window.scrollY + 100;
+      let active = null;
+      for (let i = headings.length - 1; i >= 0; i--) {
+        if (headings[i].el.offsetTop <= scrollY) {
+          active = headings[i];
+          break;
+        }
+      }
+      tocLinks.forEach(l => l.classList.remove('toc-active'));
+      if (active) active.link.classList.add('toc-active');
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', function() {
+      if (!ticking) {
+        requestAnimationFrame(updateTocActive);
+        ticking = true;
+      }
+    });
+    updateTocActive();
+  }
+})();
+</script>
+{% endblock %}

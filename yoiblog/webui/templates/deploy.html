@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% set active = "deploy" %}
+
+{% block title %}{{ t['deploy.title'] }}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <h1 class="content-title">{{ t['deploy.title'] }}</h1>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+  <div class="card">
+    <h3 style="margin-bottom:16px;">{{ t['deploy.to_github'] }}</h3>
+    <p style="color:var(--text-secondary);margin-bottom:8px;">{{ t['deploy.description'] }}</p>
+
+    <div style="margin:16px 0;padding:16px;background:var(--bg);border-radius:var(--radius-sm);">
+      <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:4px;">{{ t['deploy.repository'] }}</div>
+      <div style="font-weight:600;">{{ config.deploy.repo or t['deploy.not_configured'] }}</div>
+      <div style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;margin-bottom:4px;">{{ t['deploy.branch'] }}</div>
+      <div style="font-weight:600;">{{ config.deploy.branch }}</div>
+      <div style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;margin-bottom:4px;">{{ t['deploy.auth_method'] }}</div>
+      <div style="font-weight:600;">
+        {% if config.deploy.auth_method == 'token' %}
+          HTTPS + Token {% if config.deploy.github_token %}✅{% else %}❌{% endif %}
+        {% else %}
+          SSH {% if config.deploy.ssh_key_path %}({{ config.deploy.ssh_key_path }}){% else %}(系统默认){% endif %}
+        {% endif %}
+      </div>
+      {% if config.deploy.cname %}
+      <div style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;margin-bottom:4px;">{{ t['deploy.custom_domain'] }}</div>
+      <div style="font-weight:600;">{{ config.deploy.cname }}</div>
+      {% endif %}
+    </div>
+
+    {% if not config.deploy.repo or (config.deploy.auth_method == 'token' and not config.deploy.github_token) %}
+    <div style="padding:12px 16px;background:#fef3c7;border:1px solid #fbbf24;border-radius:var(--radius-sm);margin-bottom:16px;color:#92400e;font-size:0.9rem;">
+      ⚠️ {{ t['deploy.configure_first'] }}
+      → <a href="/settings?lang={{ lang }}" style="color:#92400e;font-weight:600;">{{ t['sidebar.settings'] }}</a>
+    </div>
+    {% endif %}
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="doGenerate(this)" id="gen-btn">{{ t['deploy.generate'] }}</button>
+      <button class="btn btn-success" onclick="doDeploy(this)" id="deploy-btn"
+        {% if not config.deploy.repo or (config.deploy.auth_method == 'token' and not config.deploy.github_token) %}disabled{% endif %}>
+        {{ t['deploy.deploy'] }}
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:16px;">{{ t['deploy.output_log'] }}</h3>
+    <div id="deploy-log" class="deploy-log">{{ t['deploy.ready'] }}</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const log = document.getElementById('deploy-log');
+
+function appendLog(msg) {
+  log.textContent += '\n' + msg;
+  log.scrollTop = log.scrollHeight;
+}
+
+async function doGenerate(btn) {
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '{{ t["deploy.generating"] }}';
+  log.textContent = '> {{ t["deploy.generating"] }}';
+  try {
+    const data = await apiCall('/api/generate', 'POST');
+    appendLog('✅ ' + data.message);
+    showToast('{{ t["deploy.generated"] }}');
+  } catch (e) {
+    appendLog('❌ ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+async function doDeploy(btn) {
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '{{ t["deploy.deploying"] }}';
+  log.textContent = '> {{ t["deploy.deploying"] }}';
+  try {
+    const data = await apiCall('/api/deploy', 'POST');
+    if (data.log) {
+      log.textContent = data.log;
+    }
+    appendLog('✅ ' + data.message);
+    showToast('{{ t["deploy.deployed"] }}');
+  } catch (e) {
+    appendLog('❌ ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+</script>
+{% endblock %}

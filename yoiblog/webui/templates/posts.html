@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% set active = "posts" %}
+
+{% block title %}{{ t['posts.title'] }}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <h1 class="content-title">{{ t['posts.title'] }}</h1>
+  <a href="/posts/new?lang={{ lang }}" class="btn btn-primary">{{ t['posts.new'] }}</a>
+</div>
+
+<div class="card">
+  {% if posts %}
+  <div class="table-wrap">
+    <table id="posts-table">
+      <thead>
+        <tr>
+          <th class="sortable" data-col="title" data-dir="none" onclick="sortTable('title', this)">
+            {{ t['posts.col_title'] }} <span class="sort-arrow"></span>
+          </th>
+          <th class="sortable" data-col="date" data-dir="desc" onclick="sortTable('date', this)">
+            {{ t['posts.col_date'] }} <span class="sort-arrow">↓</span>
+          </th>
+          <th>{{ t['posts.col_tags'] }}</th>
+          <th class="sortable" data-col="status" data-dir="none" onclick="sortTable('status', this)">
+            {{ t['posts.col_status'] }} <span class="sort-arrow"></span>
+          </th>
+          <th>{{ t['posts.col_actions'] }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for post in posts %}
+        <tr data-title="{{ post.title | lower }}" data-date="{{ post.date }}" data-status="{{ 'draft' if post.draft else 'published' }}">
+          <td><strong>{{ post.title }}</strong></td>
+          <td style="color:var(--text-muted);">{{ post.date }}</td>
+          <td>
+            {% for tag in post.tags[:3] %}
+            <span class="tag">{{ tag }}</span>
+            {% endfor %}
+          </td>
+          <td>
+            {% if post.draft %}
+            <span class="tag tag-draft">{{ t['posts.draft'] }}</span>
+            {% else %}
+            <span class="tag">{{ t['posts.published'] }}</span>
+            {% endif %}
+          </td>
+          <td style="display:flex;gap:6px;">
+            <a href="/posts/{{ post.filename }}/edit?lang={{ lang }}" class="btn btn-outline btn-sm">{{ t['posts.edit'] }}</a>
+            <button class="btn btn-danger btn-sm" onclick="deletePost('{{ post.filename }}', this)">{{ t['posts.delete'] }}</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="color:var(--text-muted);text-align:center;padding:32px;">{{ t['posts.no_posts'] }} <a href="/posts/new?lang={{ lang }}">{{ t['posts.create_first'] }}</a></p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+  .sortable { cursor: pointer; user-select: none; }
+  .sortable:hover { color: var(--accent); }
+  .sort-arrow { font-size: 0.75rem; margin-left: 4px; }
+</style>
+<script>
+function sortTable(col, th) {
+  const table = document.getElementById('posts-table');
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+
+  // Toggle direction
+  const curDir = th.dataset.dir;
+  const newDir = curDir === 'asc' ? 'desc' : 'asc';
+
+  // Reset all arrows
+  table.querySelectorAll('.sortable').forEach(h => {
+    h.dataset.dir = 'none';
+    h.querySelector('.sort-arrow').textContent = '';
+  });
+  th.dataset.dir = newDir;
+  th.querySelector('.sort-arrow').textContent = newDir === 'asc' ? '↑' : '↓';
+
+  rows.sort((a, b) => {
+    let va = a.dataset[col] || '';
+    let vb = b.dataset[col] || '';
+    let cmp = va.localeCompare(vb);
+    return newDir === 'asc' ? cmp : -cmp;
+  });
+
+  rows.forEach(row => tbody.appendChild(row));
+}
+
+async function deletePost(filename, btn) {
+  if (!confirm('{{ t["posts.confirm_delete"] }}')) return;
+  btn.disabled = true;
+  try {
+    await apiCall('/api/posts/' + filename, 'DELETE');
+    btn.closest('tr').remove();
+    showToast('{{ t["posts.deleted"] }}');
+  } catch (e) {
+    btn.disabled = false;
+  }
+}
+</script>
+{% endblock %}

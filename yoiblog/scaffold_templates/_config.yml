@@ -1,0 +1,37 @@
+site:
+  title: "My Blog"
+  subtitle: "A YoiBlog Site"
+  description: "A blog powered by YoiBlog"
+  author: "Author"
+  language: en
+  url: ""
+  root: /
+
+theme: default
+
+permalink: ":year/:month/:day/:slug/"
+
+pagination:
+  per_page: 10
+
+deploy:
+  type: github_pages
+  repo: ""
+  branch: gh-pages
+  cname: ""
+  # Authentication: "token" (HTTPS + Personal Access Token) or "ssh"
+  auth_method: token
+  # GitHub Personal Access Token (for token auth)
+  # Generate at: GitHub → Settings → Developer settings → Personal access tokens
+  # Needs 'repo' scope
+  github_token: ""
+  # SSH private key path (for ssh auth)
+  # Example: C:\Users\you\.ssh\id_ed25519
+  ssh_key_path: ""
+
+profile:
+  avatar: ""
+  bio: "Welcome to my blog!"
+  social:
+    github: ""
+    twitter: ""

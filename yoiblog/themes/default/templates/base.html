@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="{{ site.language }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ site.title }}{% endblock %}</title>
+  <meta name="description" content="{% block description %}{{ site.description }}{% endblock %}">
+  <meta name="author" content="{{ site.author }}">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="{% block og_title %}{{ site.title }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ site.description }}{% endblock %}">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/atom+xml" title="{{ site.title }} - Atom Feed" href="/atom.xml">
+  <link rel="alternate" type="application/rss+xml" title="{{ site.title }} - RSS Feed" href="/rss.xml">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- KaTeX (math rendering) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false},
+        {left: '\\\\(', right: '\\\\)', display: false},
+        {left: '\\\\[', right: '\\\\]', display: true}
+      ],
+      throwOnError: false
+    });"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block extra_head %}{% endblock %}
+
+  <!-- Theme initialization (prevent flash) -->
+  <script>
+    (function(){
+      var t = localStorage.getItem('yoiblog-theme') ||
+        (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+</head>
+<body>
+  <!-- Reading progress bar -->
+  <div class="reading-progress" id="reading-progress"></div>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="site-title">{{ site.title }}</a>
+      <button class="mobile-menu-btn" aria-label="Menu">
+        <span class="hamburger"></span>
+      </button>
+      <nav class="nav">
+        {% set nav_items = {
+          'index': {'zh': '首页', 'en': 'Home'},
+          'archive': {'zh': '归档', 'en': 'Archive'},
+          'tags': {'zh': '标签', 'en': 'Tags'},
+          'categories': {'zh': '分类', 'en': 'Categories'},
+          'search': {'zh': '搜索', 'en': 'Search'},
+          'profile': {'zh': '关于', 'en': 'About'}
+        } %}
+        {% set lang = site.language if site.language in ['zh', 'en'] else 'en' %}
+        <a href="/" {% if current_page == 'index' %}class="active"{% endif %}>{{ nav_items.index[lang] }}</a>
+        <a href="/archive/" {% if current_page == 'archive' %}class="active"{% endif %}>{{ nav_items.archive[lang] }}</a>
+        <a href="/tags/" {% if current_page == 'tags' %}class="active"{% endif %}>{{ nav_items.tags[lang] }}</a>
+        <a href="/categories/" {% if current_page == 'categories' %}class="active"{% endif %}>{{ nav_items.categories[lang] }}</a>
+        <a href="/search/" {% if current_page == 'search' %}class="active"{% endif %}>{{ nav_items.search[lang] }}</a>
+        <a href="/profile/" {% if current_page == 'profile' %}class="active"{% endif %}>{{ nav_items.profile[lang] }}</a>
+        {% for page in pages %}
+        <a href="{{ page.url }}" {% if current_page == page.slug %}class="active"{% endif %}>{{ page.title }}</a>
+        {% endfor %}
+        <button class="theme-toggle" aria-label="Toggle theme">
+          <span class="theme-icon">🌙</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main {% block main_class %}{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>&copy; {{ site.author }} &middot; Powered by <a href="https://github.com/yoiblog/yoiblog">YoiBlog</a></p>
+    </div>
+  </footer>
+
+  <!-- Back to top -->
+  <button class="back-to-top" id="back-to-top" aria-label="Back to top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+  </button>
+
+  <script src="/static/js/main.js"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% set active = "settings" %}
+
+{% block title %}{{ t['settings.title'] }}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <h1 class="content-title">{{ t['settings.title'] }}</h1>
+  <button class="btn btn-primary" onclick="saveSettings()">{{ t['settings.save'] }}</button>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+  <!-- Left column: Site info -->
+  <div class="card">
+    <h3 style="margin-bottom:16px;">{{ t['settings.site_info'] }}</h3>
+    <div class="form-group">
+      <label class="form-label">{{ t['settings.site_title'] }}</label>
+      <input type="text" id="site-title" class="form-input" value="{{ config.site.title }}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t['settings.subtitle'] }}</label>
+      <input type="text" id="site-subtitle" class="form-input" value="{{ config.site.subtitle }}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t['settings.description'] }}</label>
+      <input type="text" id="site-description" class="form-input" value="{{ config.site.description }}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t['settings.author'] }}</label>
+      <input type="text" id="site-author" class="form-input" value="{{ config.site.author }}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t['settings.language'] }}</label>
+      <input type="text" id="site-language" class="form-input" value="{{ config.site.language }}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t['settings.site_url'] }}</label>
+      <input type="text" id="site-url" class="form-input" value="{{ config.site.url }}" placeholder="https://username.github.io">
+      <div class="form-help">{{ t['settings.site_url_help'] }}</div>
+    </div>
+  </div>
+
+  <!-- Right column -->
+  <div>
+    <!-- Blog settings -->
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="margin-bottom:16px;">{{ t['settings.blog_settings'] }}</h3>
+      <div class="form-group">
+        <label class="form-label">{{ t['settings.theme'] }}</label>
+        <input type="text" id="theme" class="form-input" value="{{ config.theme }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ t['settings.permalink'] }}</label>
+        <input type="text" id="permalink" class="form-input" value="{{ config.permalink }}">
+        <div class="form-help">{{ t['settings.permalink_help'] }}</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ t['settings.per_page'] }}</label>
+        <input type="number" id="per-page" class="form-input" value="{{ config.pagination.per_page }}">
+      </div>
+    </div>
+
+    <!-- Deploy settings -->
+    <div class="card">
+      <h3 style="margin-bottom:16px;">{{ t['settings.deploy_settings'] }}</h3>
+
+      <!-- Auth method selector -->
+      <div class="form-group">
+        <label class="form-label">{{ t['settings.auth_method'] }}</label>
+        <div class="form-help" style="margin-bottom:8px;">{{ t['settings.auth_method_help'] }}</div>
+        <div style="display:flex;gap:8px;">
+          <label style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;flex:1;" id="auth-token-label">
+            <input type="radio" name="auth_method" value="token" {% if config.deploy.auth_method == 'token' %}checked{% endif %} onchange="toggleAuthMethod()">
+            {{ t['settings.auth_token'] }}
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;flex:1;" id="auth-ssh-label">
+            <input type="radio" name="auth_method" value="ssh" {% if config.deploy.auth_method == 'ssh' %}checked{% endif %} onchange="toggleAuthMethod()">
+            {{ t['settings.auth_ssh'] }}
+          </label>
+        </div>
+      </div>
+
+      <!-- Token auth fields -->
+      <div id="token-fields" style="{% if config.deploy.auth_method != 'token' %}display:none;{% endif %}">
+        <div class="form-group">
+          <label class="form-label">{{ t['settings.github_token'] }}</label>
+          <input type="password" id="github-token" class="form-input" value="{{ config.deploy.github_token }}" placeholder="{{ t['settings.github_token_placeholder'] }}">
+          <div class="form-help">{{ t['settings.github_token_help'] }}</div>
+        </div>
+      </div>
+
+      <!-- SSH auth fields -->
+      <div id="ssh-fields" style="{% if config.deploy.auth_method != 'ssh' %}display:none;{% endif %}">
+        <div class="form-group">
+          <label class="form-label">{{ t['settings.ssh_key_path'] }}</label>
+          <input type="text" id="ssh-key-path" class="form-input" value="{{ config.deploy.ssh_key_path }}" placeholder="{{ t['settings.ssh_key_placeholder'] }}">
+          <div class="form-help">{{ t['settings.ssh_key_help'] }}</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ t['settings.repo'] }}</label>
+        <input type="text" id="deploy-repo" class="form-input" value="{{ config.deploy.repo }}" placeholder="">
+        <div class="form-help" id="repo-help">{{ t['settings.repo_help_token'] if config.deploy.auth_method == 'token' else t['settings.repo_help_ssh'] }}</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ t['settings.branch'] }}</label>
+        <input type="text" id="deploy-branch" class="form-input" value="{{ config.deploy.branch }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ t['settings.cname'] }}</label>
+        <input type="text" id="deploy-cname" class="form-input" value="{{ config.deploy.cname }}" placeholder="{{ t['settings.cname_placeholder'] }}">
+      </div>
+
+      <button class="btn btn-outline" onclick="testConnection(this)" style="margin-top:8px;">
+        🔗 {{ t['settings.test_connection'] }}
+      </button>
+    </div>
+
+    <!-- Profile settings -->
+    <div class="card" style="margin-top:20px;">
+      <h3 style="margin-bottom:16px;">{{ t['settings.profile'] }}</h3>
+      <div class="form-group">
+        <label class="form-label">{{ t['settings.avatar'] }}</label>
+        <input type="text" id="profile-avatar" class="form-input" value="{{ config.profile.avatar }}" placeholder="https://example.com/avatar.jpg">
+        <div class="form-help">{{ t['settings.avatar_help'] }}</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ t['settings.bio'] }}</label>
+        <textarea id="profile-bio" class="form-input" rows="3" placeholder="{{ t['settings.bio_placeholder'] }}">{{ config.profile.bio }}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ t['settings.social'] }}</label>
+        <textarea id="profile-social" class="form-input" rows="4" placeholder="{{ t['settings.social_placeholder'] }}">{% for k, v in config.profile.social.items() %}{{ k }}: {{ v }}
+{% endfor %}</textarea>
+        <div class="form-help">{{ t['settings.social_help'] }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const REPO_HELP_TOKEN = '{{ t["settings.repo_help_token"] }}';
+const REPO_HELP_SSH = '{{ t["settings.repo_help_ssh"] }}';
+
+function parseSocialLinks(text) {
+  const result = {};
+  text.split('\n').forEach(line => {
+    const idx = line.indexOf(':');
+    if (idx > 0) {
+      const key = line.substring(0, idx).trim();
+      const val = line.substring(idx + 1).trim();
+      if (key && val) result[key] = val;
+    }
+  });
+  return result;
+}
+
+function toggleAuthMethod() {
+  const method = document.querySelector('input[name="auth_method"]:checked').value;
+  document.getElementById('token-fields').style.display = method === 'token' ? '' : 'none';
+  document.getElementById('ssh-fields').style.display = method === 'ssh' ? '' : 'none';
+  document.getElementById('repo-help').textContent = method === 'token' ? REPO_HELP_TOKEN : REPO_HELP_SSH;
+
+  // Update placeholder
+  const repoInput = document.getElementById('deploy-repo');
+  if (method === 'token') {
+    repoInput.placeholder = 'https://github.com/username/repo.git';
+  } else {
+    repoInput.placeholder = 'git@github.com:username/repo.git';
+  }
+
+  // Highlight active radio
+  document.getElementById('auth-token-label').style.borderColor = method === 'token' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('auth-ssh-label').style.borderColor = method === 'ssh' ? 'var(--accent)' : 'var(--border)';
+}
+
+// Init on load
+document.addEventListener('DOMContentLoaded', toggleAuthMethod);
+
+async function saveSettings() {
+  const authMethod = document.querySelector('input[name="auth_method"]:checked').value;
+  const data = {
+    site: {
+      title: document.getElementById('site-title').value,
+      subtitle: document.getElementById('site-subtitle').value,
+      description: document.getElementById('site-description').value,
+      author: document.getElementById('site-author').value,
+      language: document.getElementById('site-language').value,
+      url: document.getElementById('site-url').value,
+    },
+    theme: document.getElementById('theme').value,
+    permalink: document.getElementById('permalink').value,
+    pagination: { per_page: parseInt(document.getElementById('per-page').value) },
+    deploy: {
+      repo: document.getElementById('deploy-repo').value,
+      branch: document.getElementById('deploy-branch').value,
+      cname: document.getElementById('deploy-cname').value,
+      auth_method: authMethod,
+      github_token: document.getElementById('github-token').value,
+      ssh_key_path: document.getElementById('ssh-key-path').value,
+    },
+    profile: {
+      avatar: document.getElementById('profile-avatar').value,
+      bio: document.getElementById('profile-bio').value,
+      social: parseSocialLinks(document.getElementById('profile-social').value),
+    }
+  };
+  await apiCall('/api/settings', 'POST', data);
+  showToast('{{ t["settings.saved"] }}');
+}
+
+async function testConnection(btn) {
+  const origText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ {{ t["settings.testing"] }}';
+
+  // Save settings first so the test uses current values
+  try {
+    await saveSettings();
+    const data = await apiCall('/api/deploy/test', 'POST');
+    showToast(data.message);
+  } catch (e) {
+    // Error already shown by apiCall
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = origText;
+  }
+}
+</script>
+{% endblock %}
