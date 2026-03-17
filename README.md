@@ -88,13 +88,13 @@ Both can be configured through `_config.yml`, CLI flags (`--token`, `--ssh-key`)
 Install directly from the repository:
 
 ```bash
-pip install git+https://github.com/your-username/yoiblog.git
+pip install git+https://github.com/YoiGu/yoiblog.git
 ```
 
 Or clone and install in development mode:
 
 ```bash
-git clone https://github.com/your-username/yoiblog.git
+git clone https://github.com/YoiGu/yoiblog.git
 cd yoiblog
 pip install -e .
 ```

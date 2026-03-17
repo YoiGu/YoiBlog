@@ -88,13 +88,13 @@ YoiBlog 的部署方式是创建一个临时 Git 仓库，将生成的 `public/`
 从仓库直接安装：
 
 ```bash
-pip install git+https://github.com/your-username/yoiblog.git
+pip install git+https://github.com/YoiGu/yoiblog.git
 ```
 
 或克隆源码后以开发模式安装：
 
 ```bash
-git clone https://github.com/your-username/yoiblog.git
+git clone https://github.com/YoiGu/yoiblog.git
 cd yoiblog
 pip install -e .
 ```
