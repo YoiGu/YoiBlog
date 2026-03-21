@@ -4,8 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}YoiBlog{% endblock %} - WebUI</title>
+
+  <!-- Fonts (matching blog theme) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="{{ url_for('routes.static', filename='css/webui.css') }}">
   {% block extra_head %}{% endblock %}
+
+  <!-- Theme init (prevent flash) -->
+  <script>
+    (function(){
+      var t = localStorage.getItem('yoiblog-webui-theme') ||
+        (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
 </head>
 <body>
   <aside class="sidebar">
@@ -23,11 +38,17 @@
       <a href="/settings?lang={{ lang }}" {% if active == 'settings' %}class="active"{% endif %}>
         <span class="icon">⚙️</span> {{ t['sidebar.settings'] }}
       </a>
+      <a href="/preview?lang={{ lang }}" {% if active == 'preview' %}class="active"{% endif %}>
+        <span class="icon">👁️</span> {{ t['sidebar.preview'] }}
+      </a>
       <a href="/deploy?lang={{ lang }}" {% if active == 'deploy' %}class="active"{% endif %}>
         <span class="icon">🚀</span> {{ t['sidebar.deploy'] }}
       </a>
     </nav>
-    <div style="padding:12px 24px;border-top:1px solid var(--border);margin-top:auto;">
+    <div style="padding:12px 16px;border-top:1px solid var(--border);margin-top:auto;">
+      <button class="theme-toggle-btn" onclick="toggleTheme()" id="theme-toggle">
+        <span id="theme-icon">🌙</span> <span id="theme-label">Dark</span>
+      </button>
       <a href="?lang={% if lang == 'zh' %}en{% else %}zh{% endif %}" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;">
         🌐 {{ t['lang.switch'] }}
       </a>
@@ -43,6 +64,27 @@
   <script>
     const LANG = '{{ lang }}';
 
+    // Theme toggle
+    function toggleTheme() {
+      var current = document.documentElement.getAttribute('data-theme');
+      var next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('yoiblog-webui-theme', next);
+      updateThemeButton(next);
+    }
+    function updateThemeButton(theme) {
+      var icon = document.getElementById('theme-icon');
+      var label = document.getElementById('theme-label');
+      if (theme === 'dark') {
+        icon.textContent = '☀️';
+        label.textContent = 'Light';
+      } else {
+        icon.textContent = '🌙';
+        label.textContent = 'Dark';
+      }
+    }
+    updateThemeButton(document.documentElement.getAttribute('data-theme') || 'light');
+
     function showToast(message, type) {
       const t = document.getElementById('toast');
       t.textContent = message;
@@ -52,8 +94,13 @@
 
     async function apiCall(url, method, body) {
       try {
-        const opts = { method: method || 'GET', headers: {'Content-Type': 'application/json'} };
-        if (body) opts.body = JSON.stringify(body);
+        const opts = { method: method || 'GET', headers: {} };
+        if (body && !(body instanceof FormData)) {
+          opts.headers['Content-Type'] = 'application/json';
+          opts.body = JSON.stringify(body);
+        } else if (body instanceof FormData) {
+          opts.body = body;
+        }
         const resp = await fetch(url, opts);
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Request failed');

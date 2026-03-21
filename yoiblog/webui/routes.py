@@ -105,6 +105,14 @@ def settings():
     return resp
 
 
+@bp.route("/preview")
+def preview_page():
+    config = _get_config()
+    resp = make_response(render_template("preview.html", config=config))
+    _set_lang_cookie(resp)
+    return resp
+
+
 @bp.route("/deploy")
 def deploy_page():
     config = _get_config()

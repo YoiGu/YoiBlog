@@ -8,6 +8,7 @@ TRANSLATIONS = {
         "sidebar.new_post": "New Post",
         "sidebar.settings": "Settings",
         "sidebar.deploy": "Deploy",
+        "sidebar.preview": "Preview",
 
         # Dashboard
         "dashboard.title": "Dashboard",
@@ -70,6 +71,8 @@ TRANSLATIONS = {
         "editor.publish_success": "Post published and site generated!",
         "editor.publish_fail_generate": "Post saved but site generation failed",
         "editor.saved_draft": "Draft saved!",
+        "editor.upload_md": "Upload .md",
+        "editor.upload_success": "File loaded!",
 
         # Settings
         "settings.title": "Settings",
@@ -127,6 +130,25 @@ TRANSLATIONS = {
         "deploy.deployed": "Deploy complete!",
         "deploy.configure_first": "Please configure deploy settings first",
 
+        # Preview
+        "preview.title": "Site Preview",
+        "preview.description": "Preview your blog before deploying. Click Start to generate the site and launch a local preview server.",
+        "preview.start": "Start Preview",
+        "preview.stop": "Stop Preview",
+        "preview.starting": "Starting...",
+        "preview.stopping": "Stopping...",
+        "preview.running": "Running",
+        "preview.stopped": "Stopped",
+        "preview.rebuild": "Rebuild",
+        "preview.rebuilding": "Rebuilding...",
+        "preview.open_tab": "Open in New Tab",
+        "preview.status": "Server Status",
+        "preview.start_success": "Preview server started!",
+        "preview.stop_success": "Preview server stopped.",
+        "preview.rebuild_success": "Site rebuilt!",
+        "preview.rebuild_fail": "Rebuild failed",
+        "preview.placeholder": "Click \"Start Preview\" to launch the preview server.",
+
         # Profile settings
         "settings.profile": "Profile / About Page",
         "settings.avatar": "Avatar URL",
@@ -148,6 +170,7 @@ TRANSLATIONS = {
         "sidebar.new_post": "新建文章",
         "sidebar.settings": "系统设置",
         "sidebar.deploy": "部署",
+        "sidebar.preview": "预览",
 
         # Dashboard
         "dashboard.title": "仪表盘",
@@ -210,6 +233,8 @@ TRANSLATIONS = {
         "editor.publish_success": "文章已发布，站点已重新生成！",
         "editor.publish_fail_generate": "文章已保存，但站点生成失败",
         "editor.saved_draft": "草稿已保存！",
+        "editor.upload_md": "上传 .md 文件",
+        "editor.upload_success": "文件已导入！",
 
         # Settings
         "settings.title": "系统设置",
@@ -266,6 +291,25 @@ TRANSLATIONS = {
         "deploy.generated": "站点已生成！",
         "deploy.deployed": "部署完成！",
         "deploy.configure_first": "请先配置部署设置",
+
+        # Preview
+        "preview.title": "站点预览",
+        "preview.description": "在部署前预览你的博客。点击「启动预览」生成站点并启动本地预览服务器。",
+        "preview.start": "启动预览",
+        "preview.stop": "停止预览",
+        "preview.starting": "启动中...",
+        "preview.stopping": "停止中...",
+        "preview.running": "运行中",
+        "preview.stopped": "已停止",
+        "preview.rebuild": "重新构建",
+        "preview.rebuilding": "构建中...",
+        "preview.open_tab": "新标签页打开",
+        "preview.status": "服务器状态",
+        "preview.start_success": "预览服务器已启动！",
+        "preview.stop_success": "预览服务器已停止。",
+        "preview.rebuild_success": "站点已重新构建！",
+        "preview.rebuild_fail": "构建失败",
+        "preview.placeholder": "点击「启动预览」以启动预览服务器。",
 
         # Profile settings
         "settings.profile": "个人简介 / 关于页面",

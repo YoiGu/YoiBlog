@@ -64,10 +64,12 @@ When `site.language` is set to `zh` in `_config.yml`, all navigation links, page
 Running `yoiblog webui` launches a Flask-based management interface on `http://localhost:8080`. It provides:
 
 - **Dashboard** — At a glance: total posts, tags, categories, current theme. A "Generate Site" button triggers a full rebuild.
-- **Post editor** — A split-pane Markdown editor with live preview. The preview uses the same rendering pipeline as the generator, so what you see is what you get — including math formulas, code highlighting, and all extensions. Posts can be saved as drafts or published directly (publishing triggers an automatic site regeneration).
+- **Post editor** — A split-pane Markdown editor with live preview. The preview uses the same rendering pipeline as the generator, so what you see is what you get — including math formulas, syntax-highlighted code blocks, and all extensions. Upload `.md` files directly (YAML front matter is parsed automatically to populate title, tags, categories, and excerpt fields), or write from scratch.
 - **Post list** — All posts in a sortable table. Click column headers to sort by title, date, or status. Delete posts with confirmation.
+- **Live preview server** — Start a local preview server from within the WebUI to view the fully generated site in an embedded iframe before deploying. Supports start/stop, rebuild, and open-in-new-tab.
 - **Settings** — Configure site metadata (title, subtitle, author, URL), blog settings (theme, permalink pattern, pagination), deploy credentials (HTTPS token or SSH key with a connection test button), and profile information (avatar URL, bio, social links).
 - **Deploy** — Generate the site and push to GitHub Pages in one step. The log output is displayed in real time.
+- **Dark mode** — The WebUI supports light and dark themes with a toggle in the sidebar. The preference is persisted in `localStorage`. The visual design is unified with the blog's default theme — same gradient palette, typography, and accent colors.
 - **Chinese / English switching** — Click the language button in the sidebar to toggle the entire WebUI between Chinese and English. The preference is stored in a cookie.
 
 ### Deployment
@@ -350,10 +352,11 @@ yoiblog/
 └── webui/
     ├── __init__.py      # Flask app factory with i18n context processor
     ├── api.py           # REST API (CRUD posts, generate, deploy, settings, preview)
-    ├── routes.py        # Page routes (dashboard, editor, posts, settings, deploy)
+    ├── routes.py        # Page routes (dashboard, editor, posts, settings, deploy, preview)
+    ├── preview_server.py # Background preview server manager (start/stop/rebuild)
     ├── i18n.py          # Complete Chinese/English translation dictionaries
     ├── static/          # WebUI-specific CSS and assets
-    └── templates/       # WebUI Jinja2 templates (6 pages)
+    └── templates/       # WebUI Jinja2 templates (7 pages)
 ```
 
 ## License

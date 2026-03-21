@@ -26,4 +26,3 @@ public/
 
 # Environment / secrets
 .env
-.claude/settings.local.json

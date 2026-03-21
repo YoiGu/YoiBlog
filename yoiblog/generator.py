@@ -105,6 +105,9 @@ def generate(config: Config, include_drafts: bool = False, quiet: bool = False) 
     if theme_static.exists():
         copy_static(theme_static, config.public_dir / "static")
 
+    # Generate Pygments syntax highlighting CSS
+    _generate_pygments_css(config)
+
     # Copy user source assets (images, etc.)
     _copy_source_assets(config)
 
@@ -300,6 +303,27 @@ def _copy_source_assets(config: Config) -> None:
             dest = config.public_dir / rel
             ensure_dir(dest.parent)
             shutil.copy2(item, dest)
+
+
+def _generate_pygments_css(config: Config) -> None:
+    """Generate Pygments syntax highlighting CSS for code blocks."""
+    try:
+        from pygments.formatters import HtmlFormatter
+        # Light theme
+        light_css = HtmlFormatter(style="default", cssclass="highlight").get_style_defs()
+        # Dark theme overrides
+        dark_css = HtmlFormatter(style="monokai", cssclass="highlight").get_style_defs()
+        dark_css = "\n".join(
+            f"[data-theme=\"dark\"] {line}" if line.strip().startswith(".highlight")
+            else line
+            for line in dark_css.splitlines()
+        )
+        css = f"/* Pygments Syntax Highlighting — auto-generated */\n{light_css}\n\n{dark_css}\n"
+        css_path = config.public_dir / "static" / "css" / "highlight.css"
+        ensure_dir(css_path.parent)
+        write_file(css_path, css)
+    except ImportError:
+        pass
 
 
 def _date_filter(value, fmt="%B %d, %Y"):

@@ -3,17 +3,34 @@
 
 {% block title %}{% if mode == 'edit' %}{{ t['editor.edit_title'] }}{% else %}{{ t['editor.new_title'] }}{% endif %}{% endblock %}
 
+{% block extra_head %}
+<!-- Syntax highlighting for preview -->
+<link rel="stylesheet" href="/api/preview/highlight.css">
+<!-- KaTeX for math preview -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="content-header">
   <h1 class="content-title">{% if mode == 'edit' %}{{ t['editor.edit_title'] }}{% else %}{{ t['editor.new_title'] }}{% endif %}</h1>
-  <div style="display:flex;gap:8px;">
+  <div style="display:flex;gap:8px;align-items:center;">
+    <div class="upload-area">
+      <input type="file" id="md-file-input" accept=".md,.markdown,.txt" style="display:none;">
+      <button class="upload-btn" onclick="document.getElementById('md-file-input').click()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        {{ t['editor.upload_md'] }}
+      </button>
+      <span class="upload-filename" id="upload-filename"></span>
+    </div>
     <button class="btn btn-outline" onclick="savePost(true)" id="draft-btn">{{ t['editor.save_draft'] }}</button>
     <button class="btn btn-primary" onclick="savePost(false)" id="publish-btn">{{ t['editor.publish'] }}</button>
   </div>
 </div>
 
-<div class="card" style="margin-bottom:20px;">
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:12px;">
+<div class="card" style="margin-bottom:16px;">
+  <div class="editor-meta">
     <div class="form-group" style="margin:0;">
       <label class="form-label">{{ t['editor.title_label'] }}</label>
       <input type="text" id="post-title" class="form-input" placeholder="{{ t['editor.title_placeholder'] }}" value="{{ post.title if post else '' }}">
@@ -53,18 +70,20 @@ const mode = '{{ mode }}';
 const filename = '{{ post.filename if post else "" }}';
 
 const I18N = {
-  title_required: '{{ t["editor.title_required"] }}',
-  post_updated: '{{ t["editor.post_updated"] }}',
-  post_created: '{{ t["editor.post_created"] }}',
-  publishing: '{{ t["editor.publishing"] }}',
-  publish_success: '{{ t["editor.publish_success"] }}',
-  publish_fail_generate: '{{ t["editor.publish_fail_generate"] }}',
-  saved_draft: '{{ t["editor.saved_draft"] }}',
-  preview_placeholder: '{{ t["editor.preview_placeholder"] }}',
-  publish_text: '{{ t["editor.publish"] }}',
-  draft_text: '{{ t["editor.save_draft"] }}',
+  title_required: {{ t["editor.title_required"] | tojson }},
+  post_updated: {{ t["editor.post_updated"] | tojson }},
+  post_created: {{ t["editor.post_created"] | tojson }},
+  publishing: {{ t["editor.publishing"] | tojson }},
+  publish_success: {{ t["editor.publish_success"] | tojson }},
+  publish_fail_generate: {{ t["editor.publish_fail_generate"] | tojson }},
+  saved_draft: {{ t["editor.saved_draft"] | tojson }},
+  preview_placeholder: {{ t["editor.preview_placeholder"] | tojson }},
+  publish_text: {{ t["editor.publish"] | tojson }},
+  draft_text: {{ t["editor.save_draft"] | tojson }},
+  upload_success: {{ t["editor.upload_success"] | tojson }},
 };
 
+// === Live preview ===
 let previewTimer;
 editor.addEventListener('input', () => {
   clearTimeout(previewTimer);
@@ -78,11 +97,27 @@ async function updatePreview() {
     return;
   }
   try {
-    const data = await apiCall('/api/preview/render', 'POST', { content });
+    const data = await fetch('/api/preview/render', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    }).then(r => r.json());
     preview.innerHTML = data.html;
+    // Render KaTeX math
+    if (window.renderMathInElement) {
+      renderMathInElement(preview, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '\\(', right: '\\)', display: false },
+          { left: '\\[', right: '\\]', display: true }
+        ],
+        throwOnError: false
+      });
+    }
   } catch (e) {}
 }
 
+// === Save / Publish ===
 async function savePost(asDraft) {
   const title = document.getElementById('post-title').value.trim();
   const tags = document.getElementById('post-tags').value;
@@ -102,7 +137,7 @@ async function savePost(asDraft) {
     tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
     categories: categories ? categories.split(',').map(c => c.trim()).filter(Boolean) : [],
     draft: asDraft,
-    auto_generate: !asDraft,  // Auto-generate when publishing
+    auto_generate: !asDraft,
   };
 
   if (!asDraft) {
@@ -140,6 +175,60 @@ async function savePost(asDraft) {
     draftBtn.textContent = I18N.draft_text;
   }
 }
+
+// === File upload (.md) ===
+document.getElementById('md-file-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  document.getElementById('upload-filename').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const text = ev.target.result;
+    // Try to parse YAML front matter
+    const fmMatch = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+    if (fmMatch) {
+      const frontmatter = fmMatch[1];
+      const content = fmMatch[2];
+      // Parse simple key-value from frontmatter
+      const get = (key) => {
+        const m = frontmatter.match(new RegExp('^' + key + ':\\s*["\']?(.+?)["\']?\\s*$', 'm'));
+        return m ? m[1] : '';
+      };
+      const getList = (key) => {
+        // Match YAML list: key:\n  - item1\n  - item2
+        const listMatch = frontmatter.match(new RegExp(key + ':\\s*\\n((?:\\s+-\\s+.+\\n?)+)', 'm'));
+        if (listMatch) {
+          return listMatch[1].match(/- (.+)/g).map(s => s.replace(/^- /, '').trim()).join(', ');
+        }
+        // Match inline: key: [item1, item2] or key: item1, item2
+        const inlineMatch = frontmatter.match(new RegExp('^' + key + ':\\s*\\[?(.+?)\\]?\\s*$', 'm'));
+        return inlineMatch ? inlineMatch[1] : '';
+      };
+
+      const title = get('title');
+      const excerpt = get('excerpt');
+      const tags = getList('tags');
+      const categories = getList('categories');
+
+      if (title) document.getElementById('post-title').value = title;
+      if (excerpt) document.getElementById('post-excerpt').value = excerpt;
+      if (tags) document.getElementById('post-tags').value = tags;
+      if (categories) document.getElementById('post-categories').value = categories;
+      editor.value = content;
+    } else {
+      // No front matter — use filename as title
+      if (!document.getElementById('post-title').value.trim()) {
+        document.getElementById('post-title').value = file.name.replace(/\.\w+$/, '').replace(/^\d{4}-\d{2}-\d{2}-/, '');
+      }
+      editor.value = text;
+    }
+    updatePreview();
+    showToast(I18N.upload_success);
+  };
+  reader.readAsText(file, 'UTF-8');
+  e.target.value = '';
+});
 
 // Initial preview
 updatePreview();

@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% set active = "preview" %}
+{% block title %}{{ t['preview.title'] }}{% endblock %}
+
+{% block extra_head %}{% endblock %}
+
+{% block content %}
+<h1 class="content-title" style="margin-bottom:8px;">{{ t['preview.title'] }}</h1>
+<p class="content-description">
+  {{ t['preview.description'] }}
+</p>
+
+<div class="preview-toolbar">
+  <button class="btn btn-primary" id="btn-start" onclick="startPreview()">
+    {{ t['preview.start'] }}
+  </button>
+  <button class="btn btn-outline" id="btn-stop" onclick="stopPreview()" disabled>
+    {{ t['preview.stop'] }}
+  </button>
+  <button class="btn btn-outline" id="btn-rebuild" onclick="rebuildSite()" disabled>
+    {{ t['preview.rebuild'] }}
+  </button>
+  <button class="btn btn-outline" id="btn-open" onclick="openInTab()" disabled>
+    {{ t['preview.open_tab'] }}
+  </button>
+  <div class="preview-status" id="status-badge">
+    <span class="dot"></span>
+    <span id="status-text">{{ t['preview.stopped'] }}</span>
+  </div>
+</div>
+
+<div class="preview-frame-wrapper" id="frame-wrapper">
+  <div class="preview-placeholder" id="placeholder">
+    <span class="ph-icon">👁️</span>
+    <span>{{ t['preview.placeholder'] }}</span>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function() {
+  const T = {
+    start: {{ t['preview.start'] | tojson }},
+    stop: {{ t['preview.stop'] | tojson }},
+    starting: {{ t['preview.starting'] | tojson }},
+    stopping: {{ t['preview.stopping'] | tojson }},
+    rebuild: {{ t['preview.rebuild'] | tojson }},
+    rebuilding: {{ t['preview.rebuilding'] | tojson }},
+    running: {{ t['preview.running'] | tojson }},
+    stopped: {{ t['preview.stopped'] | tojson }},
+    startSuccess: {{ t['preview.start_success'] | tojson }},
+    stopSuccess: {{ t['preview.stop_success'] | tojson }},
+    rebuildSuccess: {{ t['preview.rebuild_success'] | tojson }},
+    rebuildFail: {{ t['preview.rebuild_fail'] | tojson }},
+  };
+
+  let previewUrl = null;
+
+  const btnStart = document.getElementById('btn-start');
+  const btnStop = document.getElementById('btn-stop');
+  const btnRebuild = document.getElementById('btn-rebuild');
+  const btnOpen = document.getElementById('btn-open');
+  const statusBadge = document.getElementById('status-badge');
+  const statusText = document.getElementById('status-text');
+  const frameWrapper = document.getElementById('frame-wrapper');
+  const placeholder = document.getElementById('placeholder');
+
+  function setRunning(url) {
+    previewUrl = url;
+    btnStart.disabled = true;
+    btnStop.disabled = false;
+    btnRebuild.disabled = false;
+    btnOpen.disabled = false;
+    btnStart.textContent = T.start;
+    statusBadge.className = 'preview-status running';
+    statusText.textContent = T.running;
+    showFrame(url);
+  }
+
+  function setStopped() {
+    previewUrl = null;
+    btnStart.disabled = false;
+    btnStop.disabled = true;
+    btnRebuild.disabled = true;
+    btnOpen.disabled = true;
+    btnStart.textContent = T.start;
+    btnStop.textContent = T.stop;
+    statusBadge.className = 'preview-status';
+    statusText.textContent = T.stopped;
+    hideFrame();
+  }
+
+  function showFrame(url) {
+    placeholder.style.display = 'none';
+    // Remove old iframe/bar if any
+    var old = frameWrapper.querySelector('iframe');
+    if (old) old.remove();
+    var oldBar = frameWrapper.querySelector('.preview-address-bar');
+    if (oldBar) oldBar.remove();
+
+    var bar = document.createElement('div');
+    bar.className = 'preview-address-bar';
+    bar.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>' +
+      '<span class="url-text">' + url + '</span>';
+    frameWrapper.insertBefore(bar, placeholder);
+
+    var iframe = document.createElement('iframe');
+    iframe.src = url;
+    frameWrapper.appendChild(iframe);
+  }
+
+  function hideFrame() {
+    var iframe = frameWrapper.querySelector('iframe');
+    if (iframe) iframe.remove();
+    var bar = frameWrapper.querySelector('.preview-address-bar');
+    if (bar) bar.remove();
+    placeholder.style.display = '';
+  }
+
+  window.startPreview = async function() {
+    btnStart.disabled = true;
+    btnStart.textContent = T.starting;
+    try {
+      var data = await apiCall('/api/preview/start', 'POST');
+      setRunning(data.url);
+      showToast(T.startSuccess);
+    } catch(e) {
+      btnStart.disabled = false;
+      btnStart.textContent = T.start;
+    }
+  };
+
+  window.stopPreview = async function() {
+    btnStop.disabled = true;
+    btnStop.textContent = T.stopping;
+    try {
+      await apiCall('/api/preview/stop', 'POST');
+      setStopped();
+      showToast(T.stopSuccess);
+    } catch(e) {
+      btnStop.disabled = false;
+      btnStop.textContent = T.stop;
+    }
+  };
+
+  window.rebuildSite = async function() {
+    btnRebuild.disabled = true;
+    btnRebuild.textContent = T.rebuilding;
+    try {
+      await apiCall('/api/preview/rebuild', 'POST');
+      // Refresh iframe
+      var iframe = frameWrapper.querySelector('iframe');
+      if (iframe) iframe.src = iframe.src;
+      showToast(T.rebuildSuccess);
+    } catch(e) {
+      showToast(T.rebuildFail, 'error');
+    } finally {
+      btnRebuild.disabled = false;
+      btnRebuild.textContent = T.rebuild;
+    }
+  };
+
+  window.openInTab = function() {
+    if (previewUrl) window.open(previewUrl, '_blank');
+  };
+
+  // Check if preview is already running on page load
+  fetch('/api/preview/status').then(r => r.json()).then(function(data) {
+    if (data.running) {
+      setRunning(data.url);
+    }
+  });
+})();
+</script>
+{% endblock %}

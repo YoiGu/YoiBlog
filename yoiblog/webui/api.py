@@ -279,6 +279,50 @@ def save_settings():
     return jsonify({"success": True, "message": "Settings saved"})
 
 
+@bp.route("/preview/start", methods=["POST"])
+def preview_start():
+    """Start the preview server in a background thread."""
+    config = _get_config()
+    from .preview_server import preview_manager
+    try:
+        port = preview_manager.start(config)
+        return jsonify({"success": True, "port": port, "url": f"http://localhost:{port}"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@bp.route("/preview/stop", methods=["POST"])
+def preview_stop():
+    """Stop the preview server."""
+    from .preview_server import preview_manager
+    preview_manager.stop()
+    return jsonify({"success": True})
+
+
+@bp.route("/preview/status", methods=["GET"])
+def preview_status():
+    """Check if preview server is running."""
+    from .preview_server import preview_manager
+    running = preview_manager.is_running()
+    return jsonify({
+        "running": running,
+        "port": preview_manager.port if running else None,
+        "url": f"http://localhost:{preview_manager.port}" if running else None,
+    })
+
+
+@bp.route("/preview/rebuild", methods=["POST"])
+def preview_rebuild():
+    """Rebuild the site (regenerate) while preview server is running."""
+    config = _get_config()
+    try:
+        from ..generator import generate
+        generate(config, quiet=True)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @bp.route("/preview/render", methods=["POST"])
 def preview_render():
     """Render markdown to HTML for live preview, using the full markdown config."""
@@ -290,6 +334,25 @@ def preview_render():
     md = _create_markdown(md_config)
     html = md.convert(content)
     return jsonify({"html": html})
+
+
+@bp.route("/preview/highlight.css", methods=["GET"])
+def preview_highlight_css():
+    """Serve Pygments syntax highlighting CSS for the editor preview."""
+    try:
+        from pygments.formatters import HtmlFormatter
+        from flask import Response
+        light = HtmlFormatter(style="default", cssclass="highlight").get_style_defs()
+        dark_lines = HtmlFormatter(style="monokai", cssclass="highlight").get_style_defs()
+        dark = "\n".join(
+            f"[data-theme=\"dark\"] {line}" if line.strip().startswith(".highlight")
+            else line
+            for line in dark_lines.splitlines()
+        )
+        css = f"{light}\n\n{dark}\n"
+        return Response(css, mimetype="text/css")
+    except ImportError:
+        return Response("", mimetype="text/css")
 
 
 def _parse_list_field(value) -> list[str]:

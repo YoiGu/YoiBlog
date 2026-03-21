@@ -9,10 +9,10 @@
   <button class="btn btn-primary" onclick="saveSettings()">{{ t['settings.save'] }}</button>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+<div class="settings-grid">
   <!-- Left column: Site info -->
   <div class="card">
-    <h3 style="margin-bottom:16px;">{{ t['settings.site_info'] }}</h3>
+    <h3 class="card-title">{{ t['settings.site_info'] }}</h3>
     <div class="form-group">
       <label class="form-label">{{ t['settings.site_title'] }}</label>
       <input type="text" id="site-title" class="form-input" value="{{ config.site.title }}">
@@ -44,7 +44,7 @@
   <div>
     <!-- Blog settings -->
     <div class="card" style="margin-bottom:20px;">
-      <h3 style="margin-bottom:16px;">{{ t['settings.blog_settings'] }}</h3>
+      <h3 class="card-title">{{ t['settings.blog_settings'] }}</h3>
       <div class="form-group">
         <label class="form-label">{{ t['settings.theme'] }}</label>
         <input type="text" id="theme" class="form-input" value="{{ config.theme }}">
@@ -62,7 +62,7 @@
 
     <!-- Deploy settings -->
     <div class="card">
-      <h3 style="margin-bottom:16px;">{{ t['settings.deploy_settings'] }}</h3>
+      <h3 class="card-title">{{ t['settings.deploy_settings'] }}</h3>
 
       <!-- Auth method selector -->
       <div class="form-group">
@@ -119,7 +119,7 @@
 
     <!-- Profile settings -->
     <div class="card" style="margin-top:20px;">
-      <h3 style="margin-bottom:16px;">{{ t['settings.profile'] }}</h3>
+      <h3 class="card-title">{{ t['settings.profile'] }}</h3>
       <div class="form-group">
         <label class="form-label">{{ t['settings.avatar'] }}</label>
         <input type="text" id="profile-avatar" class="form-input" value="{{ config.profile.avatar }}" placeholder="https://example.com/avatar.jpg">

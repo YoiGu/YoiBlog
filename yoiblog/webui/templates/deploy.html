@@ -8,9 +8,9 @@
   <h1 class="content-title">{{ t['deploy.title'] }}</h1>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+<div class="settings-grid">
   <div class="card">
-    <h3 style="margin-bottom:16px;">{{ t['deploy.to_github'] }}</h3>
+    <h3 class="card-title">{{ t['deploy.to_github'] }}</h3>
     <p style="color:var(--text-secondary);margin-bottom:8px;">{{ t['deploy.description'] }}</p>
 
     <div style="margin:16px 0;padding:16px;background:var(--bg);border-radius:var(--radius-sm);">
@@ -49,7 +49,7 @@
   </div>
 
   <div class="card">
-    <h3 style="margin-bottom:16px;">{{ t['deploy.output_log'] }}</h3>
+    <h3 class="card-title">{{ t['deploy.output_log'] }}</h3>
     <div id="deploy-log" class="deploy-log">{{ t['deploy.ready'] }}</div>
   </div>
 </div>

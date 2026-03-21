@@ -28,15 +28,15 @@
     onload="renderMathInElement(document.body, {
       delimiters: [
         {left: '$$', right: '$$', display: true},
-        {left: '$', right: '$', display: false},
-        {left: '\\\\(', right: '\\\\)', display: false},
-        {left: '\\\\[', right: '\\\\]', display: true}
+        {left: '\\(', right: '\\)', display: false},
+        {left: '\\[', right: '\\]', display: true}
       ],
       throwOnError: false
     });"></script>
 
   <!-- Styles -->
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/highlight.css">
   {% block extra_head %}{% endblock %}
 
   <!-- Theme initialization (prevent flash) -->
@@ -90,7 +90,7 @@
 
   <footer class="footer">
     <div class="footer-inner">
-      <p>&copy; {{ site.author }} &middot; Powered by <a href="https://github.com/yoiblog/yoiblog">YoiBlog</a></p>
+      <p>&copy; {{ site.author }} &middot; Powered by <a href="https://github.com/YoiGu/yoiblog">YoiBlog</a></p>
     </div>
   </footer>
 
