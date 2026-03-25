@@ -75,7 +75,9 @@
         <a href="/search/" {% if current_page == 'search' %}class="active"{% endif %}>{{ nav_items.search[lang] }}</a>
         <a href="/profile/" {% if current_page == 'profile' %}class="active"{% endif %}>{{ nav_items.profile[lang] }}</a>
         {% for page in pages %}
+        {% if page.slug not in ['about', 'profile'] %}
         <a href="{{ page.url }}" {% if current_page == page.slug %}class="active"{% endif %}>{{ page.title }}</a>
+        {% endif %}
         {% endfor %}
         <button class="theme-toggle" aria-label="Toggle theme">
           <span class="theme-icon">🌙</span>
