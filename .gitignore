@@ -26,3 +26,5 @@ public/
 
 # Environment / secrets
 .env
+
+.claude/

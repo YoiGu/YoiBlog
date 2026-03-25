@@ -792,6 +792,12 @@ img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
 }
 .archive-title a { color: var(--text); font-weight: 500; }
 .archive-title a:hover { color: var(--accent); }
+.archive-updated {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-left: 8px;
+  white-space: nowrap;
+}
 
 /* === Search === */
 .search-input {

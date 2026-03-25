@@ -36,7 +36,11 @@ class Post:
         title = fm.get("title", filepath.stem)
         slug = fm.get("slug", slugify(title))
         date = _parse_date(fm.get("date"), filepath)
-        updated = _parse_date(fm.get("updated")) if fm.get("updated") else None
+        if fm.get("updated"):
+            updated = _parse_date(fm.get("updated"))
+        else:
+            # Fallback to file modification time
+            updated = datetime.fromtimestamp(filepath.stat().st_mtime)
         tags = _ensure_list(fm.get("tags", []))
         categories = _ensure_list(fm.get("categories", []))
         draft = fm.get("draft", False)
