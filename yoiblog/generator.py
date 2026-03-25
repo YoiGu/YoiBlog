@@ -154,6 +154,9 @@ def _load_pages(config: Config) -> list[Page]:
     if source_dir.exists():
         for f in source_dir.glob("*.md"):
             page = Page.from_file(f, md_config)
+            # Skip about/profile pages — profile is generated separately by _generate_profile
+            if page.slug in ("about", "profile"):
+                continue
             pages.append(page)
 
     return pages
